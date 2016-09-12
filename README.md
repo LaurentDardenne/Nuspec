@@ -67,13 +67,13 @@ version                           : 0.8
 ...
 dependencies                      : {Bidule, Pester}
 ```
-The first nupsec dependencies list contains the nested nuspec  as dependency : 
+The dependencies list of fhe first nupsec object contains the nested nuspec as a dependency : 
 ```Powershell
 $nuspecs[1].metadata
 ```
 ```
 id                                : Module one
-#version                           : 1.0
+version                           : 1.0
 ...
 dependencies                      : {Machin, Truc, Module two}
 ```
