@@ -1,7 +1,4 @@
-﻿#todo test avec :
-# $MyConfig={tags='1';owner='tt'}
-#  properties $MyConfig
-$XsdFile='$PSscriptRoot\nuspec.2011.8.xsd'
+﻿$XsdFile='$PSscriptRoot\nuspec.2011.8.xsd'
 
 [System.Collections.Stack] $script:Stack=$null
 
@@ -31,6 +28,14 @@ $predicate={
   'authors',
   'description'
 )
+
+#Create proxy function : Save-Nuspec -Object $Nuspec -Filename $FileName
+#The parameters 'SerializedType' and 'targetNamespaceWith' are pre-binded
+XMLObject\Set-ParamAlias -Name Save-Nuspec -Command ConvertTo-XML `
+ -parametersBinding @{
+  SerializedType="'NugetSchema.package'"
+  targetNamespace="'http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd'"
+} 
 
 Function Test-NuspecRules{
 # Validate 'grammar' rules for a 'nuspec' bloc.
@@ -133,76 +138,28 @@ Function Test-FilesRules{
   }
 }
 
-function Add-Dependency {
-  #A nested Nuspec is added into the dependcies collection.
-param(
-  $Nuspec
-)
- $Nuspec.metadata.dependencies += Dependency -id $Nuspec.metadata.id -version $Nuspec.metadata.version
-}
-
-function Test-Caller {
-  [OutputType([System.Boolean])]
-  param (
-       [Parameter(Mandatory=$true)]
-     [string] $BlocName,
-
-     [switch] $Parent
-  )
- if ($Parent)
- { $index=3 } # 2 + this call  
- #example:
- #      0        1         2            3
- # Test-Caller.nuspec.<ScriptBlock>.Dependencies
- #  Dependencies {
- #   nuspec {...}
- #  }
-
- $callStack = @(Microsoft.PowerShell.Utility\Get-PSCallStack)
-
- $callStack[$Index].Command -eq $BlocName
-}
-
-function New-NuspecMetadata {
-  [cmdletBinding()]
-  [OutputType([NugetSchema.packageMetadata])]
-  param (
-       [parameter(Mandatory=$true)]
-      [NugetSchema.package] $Nuspec,
-
-       [parameter(Mandatory=$true)]
-      [string]$version,
-        
-       [parameter(Mandatory=$true)]
-      [string]$id
-   )
- $Nuspec.metadata= New-Object NugetSchema.packageMetadata -Property $Properties
- $Nuspec.metadata.id=$Id
- $Nuspec.metadata.version=$version
- $Nuspec
-}
-
 function nuspec {
   [cmdletBinding()]
   [OutputType([NugetSchema.package])]
   param (
-       [parameter(Mandatory=$true)]
-      [string]$version,
-       
-       [parameter(Mandatory=$true)]
+      #todo validateAttribut : https://github.com/NuGetPackageExplorer/NuGetPackageExplorer/blob/master/Core/Utility/PackageIdValidator.cs
+       [parameter(position=0,Mandatory=$true)]
       [string]$id,
-       
-       [parameter(Mandatory=$true)]
-      [scriptblock] $NuspecBloc)
-  Write-Debug "Bloc nuspec"
+
+       #todo validateAttribut regex 
+       [parameter(position=1,Mandatory=$true)]
+      [string]$version,
+
+       [parameter(position=2,Mandatory=$true)]
+      [scriptblock] $NuspecBloc
+  )
+ process{ 
+  Write-Debug "`r`n `tENTER Bloc nuspec"
   Test-NuspecRules -Bloc $NuspecBloc
    #La classe Stack est sensible à la casse
   $UpperId=$ID.ToUpper()
   if ( $null -eq $script:Stack)
-  { 
-    Write-warning "* create stack"
-    $script:Stack=New-Object System.Collections.Stack 
-  }
+  { $script:Stack=New-Object System.Collections.Stack }
   if ($script:Stack.Contains($upperId))
   { 
       #On interdit la création d'un nuspec portant un ID déjà référencé, même si la version différe.
@@ -211,61 +168,56 @@ function nuspec {
     throw  "The package name '$Id' is already declared." 
   }
   
+  Write-Debug "`t`t CREATE nuspec object $id"
   $Nuspec= [NugetSchema.package]::new()
-  
   $script:Stack.Push($upperId)
-  #todo annule
-  $ret=&$NuspecBloc
-  #foreach( $resultBloc in &$NuspecBloc)
-  foreach( $resultBloc in $ret)
+  $List=[System.Collections.Generic.List[NugetSchema.packageMetadataDependency]]::new(6)
+  foreach( $resultBloc in &$NuspecBloc)
   {
     $TypeName=$resultBloc.Gettype().Fullname
-    Write-debug "Nuspec $($ret.count) : add $TypeName"
+    Write-debug "In Nuspec : add $TypeName"
     switch($TypeName) {
-      'NugetSchema.packageMetadata'             {
-                                                    $Nuspec.metadata=$resultBloc;break
-                                                 } 
-      'NugetSchema.packageMetadataDependency[]' {
-                                                    $Nuspec.metadata.dependencies=$resultBloc;break
-                                                 }
-      'NugetSchema.packageFile[]'               {
-                                                    $Nuspec.Files=$resultBloc;break
-                                                 } 
-      'NugetSchema.package'                     {
-                                                    if (Test-Caller 'Dependencies' -Parent)
-                                                    { 
-                                                      Write-debug "In rule send  : $($resultbloc.metadata.id)- $($resultbloc.metadata.version)"
-                                                      Write-Output $resultBloc 
-                                                    } 
-                                                    else{
-                                                      Write-debug "In rule NOT send  : $($resultbloc.metadata.id)- $($resultbloc.metadata.version)"
-                                                    }
-                                                    break 
-                                                 }
-                                                   
-                                                    # }
+      'NugetSchema.packageMetadata'           {
+                                                 Write-debug "Add metadata" 
+                                                 $Nuspec.metadata=$resultBloc;break
+                                              } 
+      'NugetSchema.packageMetadataDependency' {
+                                                 Write-debug "Add dependencies"
+                                                 $List.Add($resultBloc);break
+                                              }
+      'NugetSchema.packageFile[]'             {
+                                                 Write-debug "Add Files"
+                                                 $Nuspec.Files=$resultBloc;break
+                                              } 
+      'NugetSchema.package'                   {  
+                                                 Write-debug "WriteOutput nested nuspec  : $($resultbloc.metadata.id)- $($resultbloc.metadata.version)"
+                                                 $ImplicitDependency=Dependency -id $resultbloc.metadata.id -version $resultbloc.metadata.version
+                                                 $List.Add($ImplicitDependency)
+                                                 $PSCmdlet.WriteObject($resultBloc)  ;break
+                                              }
       default {
          throw  "Assert : the $TypeName is unexpected." 
       }
     }#switch                                                                                               
   }#foreach
   
-  # if (Test-Caller 'Dependencies' -Parent)
-  # { Add-Dependency -Nuspec $Nuspec }
-
-  Write-debug " * Send created nuspec  : $($Nuspec.metadata.id)- $($Nuspec.metadata.version)"
-  Write-output $Nuspec
+  Write-debug "WriteOutput created nuspec  : $($Nuspec.metadata.id)- $($Nuspec.metadata.version)"
+  if($List.Count -gt 0)
+  { $Nuspec.metadata.dependencies=$List }
+  $PSCmdlet.WriteObject($Nuspec)
   $script:Stack.Pop()>$null
+  Write-debug "`r`n`tLEAVE nuspec"
+ }
 }
 
 function Properties {
+  #Modifie la variable $nuspec
  [cmdletBinding()]
- [OutputType([NugetSchema.packageMetadata])]
  param(
     [parameter(Mandatory=$true)]
    [hashtable] $properties
  )
- Write-Debug "Bloc properties"
+ Write-Debug "`r`n `tENTER Bloc properties"
   $SetProperties=[System.Collections.Generic.HashSet[String]]::new([string[]]$Properties.keys,[StringComparer]::InvariantCultureIgnoreCase)
   $SetProperties.ExceptWith($script:AllowedPropertiesName)
   $ofs=','
@@ -288,42 +240,51 @@ function Properties {
   } 
   #Récupère le Nuspec en cours: gv -scope -1
   New-NuspecMetadata -nuspec $Nuspec -ID $ID -Version $Version
+  Write-debug "`r`n`tLEAVE properties"
+}
+
+function New-NuspecMetadata {
+  [cmdletBinding()]
+  param (
+       [parameter(Mandatory=$true)]
+      [NugetSchema.package] $Nuspec,
+
+       [parameter(Mandatory=$true)]
+      [string]$version,
+        
+       [parameter(Mandatory=$true)]
+      [string]$id
+   )
+ $Nuspec.metadata= New-Object NugetSchema.packageMetadata -Property $Properties
+ $Nuspec.metadata.id=$Id
+ $Nuspec.metadata.version=$version
 }
 
 function Dependencies {
  [cmdletBinding()]
- [OutputType([NugetSchema.packageMetadataDependency[]])]
+ [OutputType([NugetSchema.packageMetadataDependency])]
+ [OutputType([NugetSchema.package])]
  param(
     [parameter(Mandatory=$true)]
    [scriptblock] $DependenciesBloc
  )
-  Write-Debug "Bloc Dependencies"
+ process {
+  Write-Debug "`r`n `tENTER Bloc Dependencies"
   Test-DependenciesRules -Bloc $DependenciesBloc
-  $List=[System.Collections.Generic.List[NugetSchema.packageMetadataDependency]]::new(12)
-  &$DependenciesBloc|
-   Foreach-Object {
-    if ($_ -is [NugetSchema.package])
-    { 
-      Write-debug "Nested Nuspec, we create a dependency"
-      #Write-Output $_
-      $List.Add((Add-Dependency -Nuspec $_))>$null
-    }
-    else 
-    { 
-      Write-debug "`tAdd dependency"
-      $List.Add($_)>$null }
-   }
-  [NugetSchema.packageMetadataDependency[]]$ReturnValue=$List
-  ,$ReturnValue
+  &$DependenciesBloc
+  Write-debug "`r`n`tLEAVE dependencies"
+ }
 }
 
 function Dependency{
   [cmdletBinding()]
   [OutputType([NugetSchema.packageMetadataDependency])]
   param (
-     [parameter(Mandatory=$true)] 
+     [parameter(position=0,Mandatory=$true)] 
     [string] $id,
-    
+     #todo https://docs.nuget.org/create/versioning#Specifying-Version-Ranges-in-.nuspec-Files
+     #     https://github.com/NuGetPackageExplorer/NuGetPackageExplorer/blob/master/Core/Utility/VersionUtility.cs
+     [parameter(position=1)]
     [string] $version
   )
   Write-Debug "Dependency ${ID}_$Version"
@@ -354,7 +315,7 @@ function Files {
 #      file src ''  target=''   exclude=''
 #       All
 #      } 
-  Write-Debug "Bloc Files"
+  Write-Debug "`r`n `tENTER Bloc Files"
   Test-FilesRules -Bloc $FilesBloc
   $List=[System.Collections.Generic.List[NugetSchema.packageFile]]::new(12)
   &$FilesBloc|
@@ -363,6 +324,7 @@ function Files {
   }
   [NugetSchema.packageFile[]]$ReturnValue=$List
   ,$ReturnValue
+  Write-Debug "`r`n`tLEAVE Files"
 }
 
 function file {
@@ -376,8 +338,10 @@ function file {
 
     [string]$exclude
   )
- Write-Debug "file -src $src"
+ Write-Debug "`r`n `tENTER Bloc file"
+ Write-Debug "Add file -src $src"
  New-Object -TypeName NugetSchema.packageFile -Property $PSBoundParameters
+ Write-Debug "`r`n`tLEAVE file"
 }
 
 #todo
@@ -388,9 +352,10 @@ function frameworkAssemblies{
      [parameter(Mandatory=$true)]
     [scriptblock] $frameworkAssembliesBloc
   )
-  Write-Debug "Bloc frameworkAssemblies"
+  Write-Debug "`r`n `tBloc frameworkAssemblies"
   throw "Not implemented"
   #frameworkAssemblies=[NugetSchema.packageMetadataFrameworkAssembly]::new()
+  Write-Debug "`r`n`tLEAVE frameworkAssemblies"
 }
 
 function frameworkAssembly{
@@ -402,8 +367,9 @@ function frameworkAssembly{
          
     [string] $targetFramework
   )  
- Write-Debug "Bloc frameworkAssembly"
+ Write-Debug "`r`n `tBloc frameworkAssembly"
  throw "Not implemented"
+ Write-Debug "`r`n`tLEAVE frameworkAssembly"
 }
 
 function references{
@@ -413,9 +379,10 @@ function references{
     [parameter(Mandatory=$true)]
        [scriptblock] $ReferencesBloc
   )
-  Write-Debug "Bloc References"
+  Write-Debug "`r`n `tBloc References"
   throw "Not implemented"
-  #references=[NugetSchema.packageMetadataReference]::new()  
+  #references=[NugetSchema.packageMetadataReference]::new()
+  Write-Debug "`r`n`tLEAVE References"  
 }
 
 function reference{
@@ -425,14 +392,8 @@ function reference{
      [parameter(Mandatory=$true)] 
     [string] $file
  )
- Write-Debug "Bloc reference"
+ Write-Debug "`r`n `tBloc reference"
  throw "Not implemented"
+ Write-Debug "`r`n`tLEAVE reference"
 }
 
-#Create proxy function : Save-Nuspec -Object $Nuspec -Filename $FileName
-#The parameters 'SerializedType' and 'targetNamespaceWith' are pre-binded
-XMLObject\Set-ParamAlias -Name Save-Nuspec -Command ConvertTo-XML `
- -parametersBinding @{
-  SerializedType="'NugetSchema.package'"
-  targetNamespace="'http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd'"
-} 
