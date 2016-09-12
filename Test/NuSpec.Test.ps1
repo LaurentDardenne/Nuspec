@@ -99,9 +99,9 @@ Describe "Valide the rules of a Nuspec bloc" {
       $Error[0].Exception.Message | Should be "The package name 'ModuleX' is already declared."
     } 
 
-    it "Dependencies allow only 'dependency' blocs." {
+    it "Dependencies allow only 'dependency' blocs or nuspec blocs." {
       $Error.Clear()
-      { .\"Dependencies allow only 'dependency' blocs.ps1" } | Should Throw
+      { .\"Dependencies allow only 'dependency' blocs or nuspec blocs.ps1" } | Should Throw
       $Error.Count | Should be 2
       $Error[0].Exception.Message | Should be "The Dependencies bloc contains one or more errors."
       $Error[1].Exception.Message | Should be "The command 'properties' is not supported inside a 'dependencies' bloc."
@@ -116,32 +116,89 @@ Describe "Valide the rules of a Nuspec bloc" {
     }
  }
   Context "When there no error" {
+    it "Create a simple nuspec.ps1" {
+     $result=.\"Valid declaration.ps1"
+     $result.count |Should be 1
+     $result[0].metadata.version |Should be '1.0' 
+     $result[0].metadata.id |Should be 'ModuleX'
+
+     $result[0].Files |should be $null
+     $result[0].metadata.dependencies |should be $null
+    }
+
+    it "Create nuspec with files.ps1" {
+     $result=.\"Valid declaration with files.ps1"
+     $result.count |Should be 1
+     $result[0].metadata.version |Should be '1.0' 
+     $result[0].metadata.id |Should be 'ModuleX'
+
+     $result[0].Files.Count |should be 6
+     $result[0].Files[0].src|should be 'C:\temp\Lock-File.ps1'
+     $result[0].Files[-1].src|should be 'C:\temp\Using-Culture.ps1'
+    }
+
     it "Create nuspec with dependencies.ps1" {
      $result=.\"nuspec with dependencies.ps1"
      $result.count |Should be 1
-     $result[0].version='1.0' 
-     $result[0].id='Projet one'
-     $result[0].dependencies.Count |should be 2
-     $result[0].dependencies[0].id='1.0'
-     $result[0].dependencies[0].version='machin'
-     $result[0].dependencies[1].id='1.1'
-     $result[0].dependencies[1].version='Class two'        
+     $result[0].metadata.version |should be '1.0' 
+     $result[0].metadata.id |should be 'Projet one'
+     $result[0].metadata.dependencies.Count |should be 2
+     $result[0].metadata.dependencies[0].id |should be 'machin'
+     $result[0].metadata.dependencies[0].version |should be '1.0'
+     $result[0].metadata.dependencies[1].id |should be 'Class two'
+     $result[0].metadata.dependencies[1].version |should be '1.1'         
     }
     
     it "Create nuspec as dependency.ps1" {
      $result=.\"Nested nuspec as dependency.ps1"
      $result.count |Should be 2
-     $result[0].version='1.0' 
-     $result[0].id='Projet one'
-     $result[1].version='1.1' 
-     $result[1].id='Class two'
+     $result[0].metadata.version |should be '0.8' 
+     $result[0].metadata.id |should be 'Module two'
+     $result[1].metadata.version |should be '1.0' 
+     $result[1].metadata.id |should be 'Module one'
+ 
 
-     $result[0].dependencies.Count |should be 2
-     $result[0].dependencies[0].id='1.0'
-     $result[0].dependencies[0].version='machin'
-     $result[0].dependencies[1].id='1.1'
-     $result[0].dependencies[1].version='Class two'        
+     $result[0].metadata.dependencies.Count |should be 2
+     $result[0].metadata.dependencies[0].id |should be 'Bidule'
+     $result[0].metadata.dependencies[0].version |should be '1.2'
+     $result[0].metadata.dependencies[1].id |should be 'Pester'
+     $result[0].metadata.dependencies[1].version |should be '3.9'        
+     
+     $result[1].metadata.dependencies[0].id |should be 'machin'
+     $result[1].metadata.dependencies[0].version |should be  '1.0'
+     $result[1].metadata.dependencies[1].id |should be 'Truc'
+     $result[1].metadata.dependencies[1].version |should be '2.0'      
     }
+
+    it "Create two nuspec as dependency.ps1" {
+     $result=.\"Two Nested nuspec as dependency.ps1"
+     $result.count |Should be 3
+     $result[0].metadata.version |should be '0.8' 
+     $result[0].metadata.id |should be 'Module two'
+     $result[1].metadata.version |should be '2.5' 
+     $result[1].metadata.id |should be 'Module three'
+     $result[2].metadata.version |should be '1.0' 
+     $result[2].metadata.id |should be 'Module one'
+ 
+
+     $result[0].metadata.dependencies.Count |should be 2
+     $result[0].metadata.dependencies[0].id |should be 'Bidule'
+     $result[0].metadata.dependencies[0].version |should be '1.2'
+     $result[0].metadata.dependencies[1].id |should be 'Pester'
+     $result[0].metadata.dependencies[1].version |should be '3.9'
+
+     $result[1].metadata.dependencies.Count |should be 0
+     
+     $result[2].metadata.dependencies.Count |should be 4
+     $result[2].metadata.dependencies[0].id |should be 'machin'
+     $result[2].metadata.dependencies[0].version |should be  '1.0'
+     $result[2].metadata.dependencies[1].id |should be 'Truc'
+     $result[2].metadata.dependencies[1].version |should be '2.0'
+     $result[2].metadata.dependencies[2].id |should be 'Module two'
+     $result[2].metadata.dependencies[2].version |should be '0.8'         
+     $result[2].metadata.dependencies[3].id |should be 'Module three'
+     $result[2].metadata.dependencies[3].version |should be '2.5'
+    }    
   }
 }
 

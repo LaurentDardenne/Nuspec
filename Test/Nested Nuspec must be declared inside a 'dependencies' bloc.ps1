@@ -1,13 +1,13 @@
 [cmdletBinding()]
 param()
 
-nuspec '1.0' 'ModuleX' {
+nuspec 'ModuleX' '1.0'  {
    properties @{
      Authors=$Env:USERNAME
      Description='test'
    }
 
-   nuspec '1.0' 'ModuleX' {
+   nuspec 'ModuleX' '1.0' {
      properties @{
        Authors=$Env:USERNAME
        Description='test'

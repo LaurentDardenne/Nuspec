@@ -1,6 +1,6 @@
 [cmdletBinding()]
 param()
 
-nuspec '1.0' 'ModuleX' {
+nuspec 'ModuleX' '1.0' {
 }
  

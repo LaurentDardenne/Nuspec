@@ -1,7 +1,7 @@
 [cmdletBinding()]
 param()
 
-nuspec '1.0' 'ModuleX' {
+nuspec 'ModuleX' '1.0' {
    properties @{
         Authors=$Env:USERNAME
         Description='test'
@@ -25,11 +25,11 @@ nuspec '1.0' 'ModuleX' {
         tags=$null
    }
    files {
-      file -src 'G:\PS\ProjectTools\Lock-File.ps1'
-      file -src 'G:\PS\ProjectTools\Remove-Conditionnal.ps1'
-      file -src 'G:\PS\ProjectTools\Replace-String.ps1'
-      file -src 'G:\PS\ProjectTools\Show-BalloonTip.ps1'
-      file -src 'G:\PS\ProjectTools\Test-BOMFile.ps1'
-      file -src 'G:\PS\ProjectTools\Using-Culture.ps1'
+      file -src 'C:\temp\Lock-File.ps1'
+      file -src 'C:\temp\Remove-Conditionnal.ps1'
+      file -src 'C:\temp\Replace-String.ps1'
+      file -src 'C:\temp\Show-BalloonTip.ps1'
+      file -src 'C:\temp\Test-BOMFile.ps1'
+      file -src 'C:\temp\Using-Culture.ps1'
    }
 }

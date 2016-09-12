@@ -18,6 +18,13 @@ Nuspec 'Module one' '1.0' {
              dependency 'Bidule' '1.2'
              dependency 'Pester' '3.9' 
           }
-      }
+       }
+       
+       Nuspec 'Module three' '2.5' {
+           properties @{
+             Authors=$Env:USERNAME
+             Description='test'
+           }
+       }       
     }
 } 

@@ -1,15 +1,15 @@
 [cmdletBinding()]
 param()
 
-nuspec '1.0' 'Projet one' {
+nuspec 'Projet one' '1.0' {
     properties @{
         Authors=$Env:USERNAME
         Description='test'
      }
         
-    dependency '1.0' 'machin'
+    dependency 'machin' '1.0' 
   
     dependencies {
-       dependency '1.0' 'machin'
+       dependency 'machin' '1.0'
     }      
 }

@@ -1,11 +1,11 @@
 [cmdletBinding()]
 param()
 
-nuspec '1.0' 'ModuleX' {
+nuspec 'ModuleX' '1.0'  {
  
   Files { 
     Dependencies {
     }
-    file -source 'c:\temptest.txt'
+    file -source 'c:\temp\test.txt'
   }
 }
