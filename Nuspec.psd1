@@ -12,7 +12,7 @@
 RootModule = 'Nuspec.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.1.0.0'
+ModuleVersion = '0.2.0.0'
 
 # ID used to uniquely identify this module
 GUID = '35ef93fe-14de-4edd-b80d-a88db37892ea'
@@ -48,10 +48,10 @@ CLRVersion = '4.0'
 # ProcessorArchitecture = ''
 
 # Modules that must be imported into the global environment prior to importing this module
-RequiredModules=@('XMLObject')
+#RequiredModules=@('XMLObject')
 
 # Assemblies that must be loaded prior to importing this module
-RequiredAssemblies = @('NugetSchema.dll')
+RequiredAssemblies = @('lib\net40\NugetSchema.dll')
 
 # Script files (.ps1) that are run in the caller's environment prior to importing this module.
 # ScriptsToProcess = @()
@@ -67,8 +67,8 @@ RequiredAssemblies = @('NugetSchema.dll')
 
 # Functions to export from this module
 FunctionsToExport = @(
-    'Nuspec',
-    'Properties',
+    'nuspec',
+    'properties',
     'Dependencies',
     'dependency',
     'Files',

@@ -1,5 +1,6 @@
 ﻿# Nuspec
-Powershell DSL to create a nuspec file
+Powershell DSL to create a nuspec file.
+Only the following features are implemented : Files, Dependencies
 
 ```Powershell
 nuspec '1.0' 'MyModule' {
@@ -29,7 +30,7 @@ nuspec '1.0' 'MyModule' {
       file -src 'C:\temp\Remove-Conditionnal.ps1'
       file -src 'C:\temp\Replace-String.ps1'
    }
-}|Save-Nuspec -FileName c:\temp\Test.nuspec
+}|Save-Nuspec -FileName c:\temp\Test.nuspec -Nobom
 ```
 It is possible to create nested nuspec :
 ```Powershell
@@ -67,7 +68,7 @@ version                           : 0.8
 ...
 dependencies                      : {Bidule, Pester}
 ```
-The dependencies list of fhe first nupsec object contains the nested nuspec as a dependency : 
+The dependencies list of the first nupsec object contains the nested nuspec as a dependency : 
 ```Powershell
 $nuspecs[1].metadata
 ```
@@ -77,3 +78,6 @@ version                           : 1.0
 ...
 dependencies                      : {Machin, Truc, Module two}
 ```
+The 'Nuspec' bloc create an instance of _[NugetSchema.package]_, then the Save-Nuspec function create a XML file from the C# instance.
+See the [XMLObject module](https://github.com/LaurentDardenne/XMLObject).
+

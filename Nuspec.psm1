@@ -1,4 +1,12 @@
-﻿$XsdFile='$PSscriptRoot\nuspec.2011.8.xsd'
+﻿#Note : 
+# Warning with 'Nuget pack MyNuspecFile' : Assembly outside lib folder. -->  https://github.com/NuGet/Home/issues/2834}
+
+#
+#  Init.ps1      : runs the first time a package is installed in a solution.
+#  Install.ps1   : runs when a package is installed in a project.
+#  Uninstall.ps1 : runs every time a package is uninstalled. 
+
+$XsdFile='$PSscriptRoot\nuspec.2011.8.xsd'
 
 [System.Collections.Stack] $script:Stack=$null
 
@@ -16,12 +24,22 @@ $predicate={
   'iconUrl',
   'requireLicenseAcceptance',
   'requireLicenseAcceptanceSpecified',
+  'developmentDependency',
+  'developmentDependencySpecified',
   'description',
   'summary',
   'releaseNotes',
   'copyright',
   'language',
-  'tags'
+  'tags',
+  'serviceable',
+  'serviceableSpecified',
+  'packageTypes',
+  'dependencies',
+  'frameworkAssemblies',
+  'references',
+  'contentFiles',
+  'minClientVersion'
 )
 
 [string[]] $script:MandatoryPropertiesName=@(
@@ -35,106 +53,88 @@ XMLObject\Set-ParamAlias -Name Save-Nuspec -Command ConvertTo-XML `
  -parametersBinding @{
   SerializedType="'NugetSchema.package'"
   targetNamespace="'http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd'"
+   #Nuget need XML file with encoding UTF8-NoBOM 
+  NoBom='$true'
 } 
 
-Function Test-NuspecRules{
-# Validate 'grammar' rules for a 'nuspec' bloc.
-  [cmdletBinding()]
-  param (
-      [Parameter(Mandatory=$true)]
-     $Bloc
-  )
-  #Write-Debug "debug control rule for : $Container - $Content "
-   #'Premier niveau' seulement
-  $Commands=foreach( $cmd in $Bloc.Ast.FindAll($predicate, $false))
+function Test-NuspecRules {
+  param( $Group)
+
+  switch ($Group.Name) 
   {
-    #todo Psake\Properties ??
-    $cmd.GetCommandName() -replace '.*\\(.*)$','$1'
-  }
-  $isError=$false
-  if ($null -eq $commands) 
-  {$isError=$true; Write-Error "Nuspec must contain at least a 'properties' bloc."}
-  $CmdGrp=$Commands|Group-Object
-  foreach($Group in $CmdGrp)
-  {
-    Write-Debug "Current command : $($Group.Name)"
-    switch ($Group.Name) 
-    {
-      'nuspec'       {if ($group.count -ge 1) {$isError=$true; Write-Error "Nested Nuspec must be declared inside a 'dependencies' bloc."};break}
-      'properties'   {if ($group.count -ne 1) {$isError=$true; Write-Error "Nuspec must have one and only one 'properties' bloc."}; break}
-      'dependencies' {if ($group.count -ne 1) {$isError=$true; Write-Error "Nuspec must have one and only one 'dependencies' bloc."}; break}
-      'files'        {if ($group.count -gt 1) {$isError=$true; Write-Error "Nuspec must have only one 'files' bloc."};break}
-                      #Those commands are not containers
-      'dependency'   {$isError=$true; Write-Error "dependency must be declared inside a 'dependencies' bloc."; break }
-      'file'         {$isError=$true; Write-Error "file must be declared inside a 'files' bloc."; break }
-    }
-  }
-  if ($isError)
-  {
-    $script:Stack=$null  
-    throw "The nuspec bloc contains one or more errors." #todo détail AST
+    'nuspec'       {if ($group.count -ge 1) {$isError=$true; Write-Error "Nested Nuspec must be declared inside a 'dependencies' bloc."};break}
+    'properties'   {if ($group.count -ne 1) {$isError=$true; Write-Error "Nuspec must have one and only one 'properties' bloc."}; break}
+    'dependencies' {if ($group.count -ne 1) {$isError=$true; Write-Error "Nuspec must have one and only one 'dependencies' bloc."}; break}
+    'files'        {if ($group.count -gt 1) {$isError=$true; Write-Error "Nuspec must have only one 'files' bloc."};break}
+    
+                    #Those commands are not containers
+    'dependency'   {$isError=$true; Write-Error "dependency must be declared inside a 'dependencies' bloc."; break }
+    'file'         {$isError=$true; Write-Error "file must be declared inside a 'files' bloc."; break }
   }
 }
 
 Function Test-DependenciesRules{
-# Validate 'grammar' rules for a 'dependencies' bloc.  
   [cmdletBinding()]
-  param (
-      [Parameter(Mandatory=$true)]
-     $Bloc
-  )
-
-   #'Premier niveau' seulement
-  $Commands=foreach( $cmd in $Bloc.Ast.FindAll($predicate, $false))
-  {  $cmd.GetCommandName() -replace '.*\\(.*)$','$1' }
-  $isError=$false
-  if ($null -eq $commands) 
-  {$isError=$true; Write-Error "Dependencies must contain at least a 'dependency' command."}
-  $CmdGrp=$Commands|Group-Object
-  foreach($Group in $CmdGrp)
+  param( $Group)
+  
+  switch ($Group.Name) 
   {
-    Write-Debug "Current command : $($Group.Name)"
-    switch ($Group.Name) 
-    {
-      'nuspec'                {break}
-      { $_ -ne 'dependency'}  {$isError=$true; Write-Error "The command '$($Group.Name)' is not supported inside a 'dependencies' bloc."; break }
-    }
-  }
-  if ($isError)
-  {
-    $script:Stack=$null  
-    throw "The dependencies bloc contains one or more errors." #todo détail AST
+    'nuspec'                {break}
+    { $_ -ne 'dependency'}  {$isError=$true; Write-Error "The command '$($Group.Name)' is not supported inside a 'dependencies' bloc."; break }
   }
 }
 
 Function Test-FilesRules{
-  # Validate 'grammar' rules for a 'files' bloc.
+  [cmdletBinding()]
+  param( $Group)
+
+  switch ($Group.Name) 
+  {
+    { $_ -ne 'file'}  {$isError=$true; Write-Error "The command '$($Group.Name)' is not supported inside a 'files' bloc."; break }
+  }
+}
+
+Function Test-Rule{
+# Validate 'grammar' rules for a a specific bloc.
   [cmdletBinding()]
   param (
-      [Parameter(Mandatory=$true)]
-     $Bloc
-  )
-  
-   #'Premier niveau' seulement
+     #Name of the bloc
+      [Parameter(position=0,Mandatory=$true)]
+     [string]$Container,
+     
+     #Name of the child bloc
+      [Parameter(position=1,Mandatory=$true)]
+     [string]$Content,
+     
+     #Name of the validation function
+      [Parameter(position=1,Mandatory=$true)]
+     [string] $Validator,
+     
+     #Code to validate
+      [Parameter(position=3,Mandatory=$true)]
+     [scriptblock] $Bloc
+ )
+ 
+  Write-Debug "Control the rules for : $Container - $Content "
+   #Do not search in nested script blocks.
   $Commands=foreach( $cmd in $Bloc.Ast.FindAll($predicate, $false))
-  {  $cmd.GetCommandName() -replace '.*\\(.*)$','$1' }
+  {
+    # todo Psake\Properties --> '(?<Qualifier>.*)\\(.*)$'
+    $cmd.GetCommandName() -replace '.*\\(.*)$','$1'
+  }
   $isError=$false
-   #todo régle avec -All !!! ?
   if ($null -eq $commands) 
-  {$isError=$true; Write-Error "Files must contain at least a 'file' command."}
+  {$isError=$true; Write-Error "$Container must contain at least a '$Content' bloc."}
   $CmdGrp=$Commands|Group-Object
   foreach($Group in $CmdGrp)
   {
     Write-Debug "Current command : $($Group.Name)"
-    switch ($Group.Name) 
-    {
-      { $_ -ne 'file'}  {$isError=$true; Write-Error "The command '$($Group.Name)' is not supported inside a 'files' bloc."; break }
-    }
+    . $Validator -Group $Group
   }
   if ($isError)
   {
     $script:Stack=$null  
-    throw "The files bloc contains one or more errors." #todo détail AST
+    throw "The $Container bloc contains one or more errors." #todo détail AST
   }
 }
 
@@ -142,20 +142,22 @@ function nuspec {
   [cmdletBinding()]
   [OutputType([NugetSchema.package])]
   param (
-      #todo validateAttribut : https://github.com/NuGetPackageExplorer/NuGetPackageExplorer/blob/master/Core/Utility/PackageIdValidator.cs
+       #nuget.exe : Id must not exceed 100 characters.
        [parameter(position=0,Mandatory=$true)]
       [string]$id,
 
-       #todo validateAttribut regex 
+       #nuget.exe : '1.A.0' |'(1.0.0)' is not a valid version string.
        [parameter(position=1,Mandatory=$true)]
       [string]$version,
 
        [parameter(position=2,Mandatory=$true)]
-      [scriptblock] $NuspecBloc
+      [scriptblock] $NuspecBloc,
+
+      [switch] $DevelopmentDependency
   )
  process{ 
   Write-Debug "`r`n `tENTER Bloc nuspec"
-  Test-NuspecRules -Bloc $NuspecBloc
+  Test-Rule -Container 'Nuspec' -Content 'properties' -Validator  'Test-NuspecRules' -Bloc $NuspecBloc
    #La classe Stack est sensible à la casse
   $UpperId=$ID.ToUpper()
   if ( $null -eq $script:Stack)
@@ -171,30 +173,39 @@ function nuspec {
   Write-Debug "`t`t CREATE nuspec object $id"
   $Nuspec= [NugetSchema.package]::new()
   $script:Stack.Push($upperId)
-  $List=[System.Collections.Generic.List[NugetSchema.packageMetadataDependency]]::new(6)
+   
+  $List=[System.Collections.Generic.List[NugetSchema.Dependency]]::new(6)
   foreach( $resultBloc in &$NuspecBloc)
   {
     $TypeName=$resultBloc.Gettype().Fullname
     Write-debug "In Nuspec : add $TypeName"
     switch($TypeName) {
-      'NugetSchema.packageMetadata'           {
-                                                 Write-debug "Add metadata" 
-                                                 $Nuspec.metadata=$resultBloc;break
-                                              } 
-      'NugetSchema.packageMetadataDependency' {
-                                                 Write-debug "Add dependencies"
-                                                 $List.Add($resultBloc);break
-                                              }
-      'NugetSchema.packageFile[]'             {
-                                                 Write-debug "Add Files"
-                                                 $Nuspec.Files=$resultBloc;break
-                                              } 
-      'NugetSchema.package'                   {  
-                                                 Write-debug "WriteOutput nested nuspec  : $($resultbloc.metadata.id)- $($resultbloc.metadata.version)"
-                                                 $ImplicitDependency=Dependency -id $resultbloc.metadata.id -version $resultbloc.metadata.version
-                                                 $List.Add($ImplicitDependency)
-                                                 $PSCmdlet.WriteObject($resultBloc)  ;break
-                                              }
+       'NugetSchema.packageMetadata'  {
+                                         Write-debug "Add metadata" 
+                                         $Nuspec.metadata=$resultBloc
+                                         break
+                                      } 
+       'NugetSchema.Dependency'       {
+                                         Write-debug "Add dependencies"
+                                         $List.Add($resultBloc)
+                                         break
+                                      }
+                                                   
+       'NugetSchema.packageFile[]'    {
+                                         Write-debug "Add Files"
+                                         $Nuspec.Files=$resultBloc
+                                         break
+                                      } 
+       'NugetSchema.package'          {  
+                                         Write-debug "WriteOutput nested nuspec  : $($resultbloc.metadata.id)- $($resultbloc.metadata.version)"
+                                          #todo régle de versionning 
+                                         $ImplicitDependency=Dependency -id $resultbloc.metadata.id -version $resultbloc.metadata.version
+                                         $List.Add($ImplicitDependency)
+                                          #Les différent objets sont tous envoyés dans un seul pipeline
+                                          #certains sont consommés, les nested nuspec doivnet être réémis. 
+                                         $PSCmdlet.WriteObject($resultBloc)
+                                         break
+                                      }
       default {
          throw  "Assert : the $TypeName is unexpected." 
       }
@@ -203,21 +214,24 @@ function nuspec {
   
   Write-debug "WriteOutput created nuspec  : $($Nuspec.metadata.id)- $($Nuspec.metadata.version)"
   if($List.Count -gt 0)
-  { $Nuspec.metadata.dependencies=$List }
+  { 
+    $Nuspec.metadata.dependencies=[NugetSchema.packageMetadataDependencies]::new()
+    $Nuspec.metadata.dependencies.Items=$List
+  }
   $PSCmdlet.WriteObject($Nuspec)
   $script:Stack.Pop()>$null
   Write-debug "`r`n`tLEAVE nuspec"
  }
 }
 
-function Properties {
+function properties {
   #Modifie la variable $nuspec
  [cmdletBinding()]
  param(
     [parameter(Mandatory=$true)]
    [hashtable] $properties
  )
- Write-Debug "`r`n `tENTER Bloc properties"
+  Write-Debug "`r`n `tENTER Bloc properties"
   $SetProperties=[System.Collections.Generic.HashSet[String]]::new([string[]]$Properties.keys,[StringComparer]::InvariantCultureIgnoreCase)
   $SetProperties.ExceptWith($script:AllowedPropertiesName)
   $ofs=','
@@ -239,7 +253,7 @@ function Properties {
     throw "The following properties are mandatory : $Mandatory" 
   } 
   #Récupère le Nuspec en cours: gv -scope -1
-  New-NuspecMetadata -nuspec $Nuspec -ID $ID -Version $Version
+  New-NuspecMetadata -nuspec $Nuspec -ID $ID -Version $Version -DevelopmentDependency:$DevelopmentDependency
   Write-debug "`r`n`tLEAVE properties"
 }
 
@@ -253,45 +267,54 @@ function New-NuspecMetadata {
       [string]$version,
         
        [parameter(Mandatory=$true)]
-      [string]$id
+      [string]$id,
+      
+      [switch] $DevelopmentDependency
    )
  $Nuspec.metadata= New-Object NugetSchema.packageMetadata -Property $Properties
  $Nuspec.metadata.id=$Id
  $Nuspec.metadata.version=$version
+ $Nuspec.metadata.DevelopmentDependency=$DevelopmentDependency
 }
 
 function Dependencies {
  [cmdletBinding()]
- [OutputType([NugetSchema.packageMetadataDependency])]
- [OutputType([NugetSchema.package])]
+  #on ne gére pas les dependencyGroup spécifique à VS
+ [OutputType([NugetSchema.Dependency])]
+  #Le bloc peut contenir des déclarations imbriquées de package
+ [OutputType([NugetSchema.package])] 
  param(
     [parameter(Mandatory=$true)]
    [scriptblock] $DependenciesBloc
  )
  process {
   Write-Debug "`r`n `tENTER Bloc Dependencies"
-  Test-DependenciesRules -Bloc $DependenciesBloc
+  Test-Rule -Container 'Dependencies' -Content 'dependency' -Validator 'Test-DependenciesRules' -Bloc $DependenciesBloc
   &$DependenciesBloc
   Write-debug "`r`n`tLEAVE dependencies"
  }
 }
 
-function Dependency{
+function dependency{
   [cmdletBinding()]
-  [OutputType([NugetSchema.packageMetadataDependency])]
+  [OutputType([NugetSchema.Dependency])]
   param (
      [parameter(position=0,Mandatory=$true)] 
     [string] $id,
-     #todo https://docs.nuget.org/create/versioning#Specifying-Version-Ranges-in-.nuspec-Files
-     #     https://github.com/NuGetPackageExplorer/NuGetPackageExplorer/blob/master/Core/Utility/VersionUtility.cs
+    
+     #nuget.exe : Dependency 'SampleDependency' has an invalid version.
+     #            '1.0]' is not a valid version string.
      [parameter(position=1)]
     [string] $version
   )
   Write-Debug "Dependency ${ID}_$Version"
-  New-Object NugetSchema.packageMetadataDependency -Property $PSBoundParameters
+  New-Object NugetSchema.Dependency -Property $PSBoundParameters
 }
 
 function Files {
+ #DOC:
+ #Par défaut 'nuget.exe pack' ajoute tous le fichiers du répertoire courant.
+ #Il est recommandé de spécifier la balsies 'Files'. 
   [CmdletBinding(DefaultParameterSetName="All")] 
   [OutputType([NugetSchema.packageFile[]])]
   param (
@@ -303,20 +326,11 @@ function Files {
     [scriptblock] $FilesBloc,
      
      [parameter(Mandatory=$true,ParameterSetName='All')]
-    [switch] $All
+    [switch] $All #todo
   )
-  #control les files  considérés comme All ne doivent pas se retrouver dans
-  #file src
-  #et les excludes ne pas être en contradiction ( SI c'est possible à Faire !!)
 
-#   Files -All #si files absent pareil
-#   Files -All -exclude  
-#   Files {
-#      file src ''  target=''   exclude=''
-#       All
-#      } 
   Write-Debug "`r`n `tENTER Bloc Files"
-  Test-FilesRules -Bloc $FilesBloc
+  Test-Rule -Container 'Files' -Content 'files' -Validator 'Test-FilesRules' -Bloc $FilesBloc
   $List=[System.Collections.Generic.List[NugetSchema.packageFile]]::new(12)
   &$FilesBloc|
   Foreach-Object {
@@ -343,57 +357,3 @@ function file {
  New-Object -TypeName NugetSchema.packageFile -Property $PSBoundParameters
  Write-Debug "`r`n`tLEAVE file"
 }
-
-#todo
-function frameworkAssemblies{
-  [cmdletBinding()]
-  [OutputType([NugetSchema.packageMetadataFrameworkAssembly[]])]
-  param(
-     [parameter(Mandatory=$true)]
-    [scriptblock] $frameworkAssembliesBloc
-  )
-  Write-Debug "`r`n `tBloc frameworkAssemblies"
-  throw "Not implemented"
-  #frameworkAssemblies=[NugetSchema.packageMetadataFrameworkAssembly]::new()
-  Write-Debug "`r`n`tLEAVE frameworkAssemblies"
-}
-
-function frameworkAssembly{
-  [cmdletBinding()]
-  [OutputType([NugetSchema.packageMetadataFrameworkAssembly])]
-  param(
-     [parameter(Mandatory=$true)] 
-    [string] $assemblyName,
-         
-    [string] $targetFramework
-  )  
- Write-Debug "`r`n `tBloc frameworkAssembly"
- throw "Not implemented"
- Write-Debug "`r`n`tLEAVE frameworkAssembly"
-}
-
-function references{
-  [cmdletBinding()]
-  [OutputType([NugetSchema.packageMetadataReference[]])]
-  param(
-    [parameter(Mandatory=$true)]
-       [scriptblock] $ReferencesBloc
-  )
-  Write-Debug "`r`n `tBloc References"
-  throw "Not implemented"
-  #references=[NugetSchema.packageMetadataReference]::new()
-  Write-Debug "`r`n`tLEAVE References"  
-}
-
-function reference{
- [cmdletBinding()]
- [OutputType([NugetSchema.packageMetadataReference])] 
- param(  
-     [parameter(Mandatory=$true)] 
-    [string] $file
- )
- Write-Debug "`r`n `tBloc reference"
- throw "Not implemented"
- Write-Debug "`r`n`tLEAVE reference"
-}
-
