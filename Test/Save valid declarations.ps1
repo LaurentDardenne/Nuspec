@@ -13,6 +13,8 @@ nuspec 'ModuleX' '1.0' {
          #default $false
         requireLicenseAcceptance=$False
         requireLicenseAcceptanceSpecified=$False
+        #developmentDependency=$False
+        #developmentDependencySpecified=$False
 
          #default en-US'
         language='en-US'
@@ -23,6 +25,13 @@ nuspec 'ModuleX' '1.0' {
         iconUrl='https://github.com/LaurentDardenne/Nuspec/blob/master/Icon/Nuspec.png'
         releaseNotes=''
         tags=$null
+         #default $false
+        #serviceable=$False #v3.5 ?
+        #serviceableSpecified=$False
+         #default '' or $null
+        #packageTypes #v3.5 ? value: "Legacy","DotnetCliTool","Dependency"
+        #contentFile Visual studio
+        minClientVersion='2.7'        
    }
    files {
       file -src 'G:\PS\ProjectTools\Lock-File.ps1'

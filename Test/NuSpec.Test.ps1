@@ -114,6 +114,30 @@ Describe "Valide the rules of a Nuspec bloc" {
       $Error[0].Exception.Message | Should be "The Files bloc contains one or more errors."
       $Error[1].Exception.Message | Should be "The command 'Dependencies' is not supported inside a 'files' bloc."
     }
+
+    it "Dependencies inside 'Files' blocs." {
+      $Error.Clear()
+      { .\"Dependencies inside Files.ps1" } | Should Throw
+      $Error.Count | Should be 2
+      $Error[0].Exception.Message | Should be "The Files bloc contains one or more errors."
+      $Error[1].Exception.Message | Should be "The command 'dependencies' is not supported inside a 'files' bloc."
+    }
+
+    it "Files inside Dependencies blocs." {
+      $Error.Clear()
+      { .\"Files inside Dependencies.ps1" } | Should Throw
+      $Error.Count | Should be 2
+      $Error[0].Exception.Message | Should be "The Dependencies bloc contains one or more errors."
+      $Error[1].Exception.Message | Should be "The command 'Files' is not supported inside a 'dependencies' bloc."
+    }
+
+    it "Nuspec inside 'Files' bloc" {
+      $Error.Clear()
+      { .\"Nuspec inside Files.ps1" } | Should Throw
+      $Error.Count | Should be 2
+      $Error[0].Exception.Message | Should be "The Files bloc contains one or more errors."
+      $Error[1].Exception.Message | Should be "The command 'Nuspec' is not supported inside a 'files' bloc."
+    }
  }
   Context "When there no error" {
     it "Create a simple nuspec.ps1" {
@@ -137,18 +161,18 @@ Describe "Valide the rules of a Nuspec bloc" {
      $result[0].Files[-1].src|should be 'C:\temp\Using-Culture.ps1'
     }
 
-    it "Create nuspec with dependencies.ps1" {
+    it "Create nuspec with dependencies" {
      $result=.\"nuspec with dependencies.ps1"
      $result.count |Should be 1
      $result[0].metadata.version |should be '1.0' 
      $result[0].metadata.id |should be 'Projet one'
-     $result[0].metadata.dependencies.Count |should be 2
-     $result[0].metadata.dependencies[0].id |should be 'machin'
-     $result[0].metadata.dependencies[0].version |should be '1.0'
-     $result[0].metadata.dependencies[1].id |should be 'Class two'
-     $result[0].metadata.dependencies[1].version |should be '1.1'         
+     $result[0].metadata.dependencies.Items.Count |should be 2
+     $result[0].metadata.dependencies.Items[0].id |should be 'machin'
+     $result[0].metadata.dependencies.Items[0].version |should be '1.0'
+     $result[0].metadata.dependencies.Items[1].id |should be 'Class two'
+     $result[0].metadata.dependencies.Items[1].version |should be '1.1'         
     }
-    
+
     it "Create nuspec as dependency.ps1" {
      $result=.\"Nested nuspec as dependency.ps1"
      $result.count |Should be 2
@@ -158,16 +182,16 @@ Describe "Valide the rules of a Nuspec bloc" {
      $result[1].metadata.id |should be 'Module one'
  
 
-     $result[0].metadata.dependencies.Count |should be 2
-     $result[0].metadata.dependencies[0].id |should be 'Bidule'
-     $result[0].metadata.dependencies[0].version |should be '1.2'
-     $result[0].metadata.dependencies[1].id |should be 'Pester'
-     $result[0].metadata.dependencies[1].version |should be '3.9'        
+     $result[0].metadata.dependencies.Items.Count |should be 2
+     $result[0].metadata.dependencies.Items[0].id |should be 'Bidule'
+     $result[0].metadata.dependencies.Items[0].version |should be '1.2'
+     $result[0].metadata.dependencies.Items[1].id |should be 'Pester'
+     $result[0].metadata.dependencies.Items[1].version |should be '3.9'        
      
-     $result[1].metadata.dependencies[0].id |should be 'machin'
-     $result[1].metadata.dependencies[0].version |should be  '1.0'
-     $result[1].metadata.dependencies[1].id |should be 'Truc'
-     $result[1].metadata.dependencies[1].version |should be '2.0'      
+     $result[1].metadata.dependencies.Items[0].id |should be 'machin'
+     $result[1].metadata.dependencies.Items[0].version |should be  '1.0'
+     $result[1].metadata.dependencies.Items[1].id |should be 'Truc'
+     $result[1].metadata.dependencies.Items[1].version |should be '2.0'      
     }
 
     it "Create two nuspec as dependency.ps1" {
@@ -181,23 +205,23 @@ Describe "Valide the rules of a Nuspec bloc" {
      $result[2].metadata.id |should be 'Module one'
  
 
-     $result[0].metadata.dependencies.Count |should be 2
-     $result[0].metadata.dependencies[0].id |should be 'Bidule'
-     $result[0].metadata.dependencies[0].version |should be '1.2'
-     $result[0].metadata.dependencies[1].id |should be 'Pester'
-     $result[0].metadata.dependencies[1].version |should be '3.9'
+     $result[0].metadata.dependencies.Items.Count |should be 2
+     $result[0].metadata.dependencies.Items[0].id |should be 'Bidule'
+     $result[0].metadata.dependencies.Items[0].version |should be '1.2'
+     $result[0].metadata.dependencies.Items[1].id |should be 'Pester'
+     $result[0].metadata.dependencies.Items[1].version |should be '3.9'
 
-     $result[1].metadata.dependencies.Count |should be 0
+     $result[1].metadata.dependencies.Items.Count |should be 0
      
-     $result[2].metadata.dependencies.Count |should be 4
-     $result[2].metadata.dependencies[0].id |should be 'machin'
-     $result[2].metadata.dependencies[0].version |should be  '1.0'
-     $result[2].metadata.dependencies[1].id |should be 'Truc'
-     $result[2].metadata.dependencies[1].version |should be '2.0'
-     $result[2].metadata.dependencies[2].id |should be 'Module two'
-     $result[2].metadata.dependencies[2].version |should be '0.8'         
-     $result[2].metadata.dependencies[3].id |should be 'Module three'
-     $result[2].metadata.dependencies[3].version |should be '2.5'
+     $result[2].metadata.dependencies.Items.Count |should be 4
+     $result[2].metadata.dependencies.Items[0].id |should be 'machin'
+     $result[2].metadata.dependencies.Items[0].version |should be  '1.0'
+     $result[2].metadata.dependencies.Items[1].id |should be 'Truc'
+     $result[2].metadata.dependencies.Items[1].version |should be '2.0'
+     $result[2].metadata.dependencies.Items[2].id |should be 'Module two'
+     $result[2].metadata.dependencies.Items[2].version |should be '0.8'         
+     $result[2].metadata.dependencies.Items[3].id |should be 'Module three'
+     $result[2].metadata.dependencies.Items[3].version |should be '2.5'
     }    
   }
 }
@@ -213,16 +237,4 @@ Describe "Valide the rules of a Nuspec bloc" {
 # '@ 
 # }
 
-# it "" {
-#  $code=@'
-#     Nuspec '1.0' 'Projet one' {
-#      properties @{
-#         Description='test'
-#       }
-#       Files {
-#         file -src 'c:\temp' -exclude='c:\temp\*.txt'
-#         INCLUDEFile 'ModuleX''1.0'
-#       }
-#     }
-# '@ 
 # }
