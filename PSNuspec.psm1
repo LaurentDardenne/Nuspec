@@ -1,4 +1,4 @@
-﻿#Note : 
+#Note : 
 # Warning with 'Nuget pack MyNuspecFile' : Assembly outside lib folder. -->  https://github.com/NuGet/Home/issues/2834}
 
 #

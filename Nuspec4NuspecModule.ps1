@@ -1,7 +1,8 @@
 ﻿
-nuspec 'Nuspec' '0.2' {
+nuspec 'PSNuspec' '0.2.0' {
    properties @{
         Authors='Dardenne Laurent'
+        Owners='Dardenne Laurent'
         Description='Powershell DSL to create a nuspec file.'
         title='Nuspec module'
         summary='Powershell DSL to create a nuspec file.'
@@ -10,8 +11,15 @@ nuspec 'Nuspec' '0.2' {
         licenseUrl='https://creativecommons.org/licenses/by-nc-sa/4.0/'
         projectUrl='https://github.com/LaurentDardenne/Nuspec'
         iconUrl='https://github.com/LaurentDardenne/Nuspec/blob/master/icon/Nuspec.png'
-        releaseNotes=''
-        tags=$null
+        releaseNotes=@'
+2016-09-13  Version 0.2.0
+Use the latest XSD file (Nuget.exe v3.5 rc1)
+
+2016-09-11  Version 0.1.0.0
+Original version
+'@
+        tags='PSModule PSIncludes_Function PSFunction_nuspec PSFunction_properties PSFunction_Dependencies PSFunction_dependency PSFunction_Files PSFunction_file PSFunction_Save-Nuspec PSCommand_nuspec PSCommand_properties PSCommand_Dependencies PSCommand_dependency PSCommand_Files PSCommand_file PSCommand_Save-Nuspec'
+        #tags='nuspec XSD Powershell DSL'
    }
    
    dependencies {
@@ -21,8 +29,8 @@ nuspec 'Nuspec' '0.2' {
    files {
         file -src "$NuspecVcs\lib\net40\NugetSchema.dll" -target "lib\net40\NugetSchema.dll"
         file -src "$NuspecVcs\nuspec.2011.8.xsd"
-        file -src "$NuspecVcs\Nuspec.psd1"
-        file -src "$NuspecVcs\Nuspec.psm1"
+        file -src "$NuspecVcs\PSNuspec.psd1"
+        file -src "$NuspecVcs\PSNuspec.psm1"
         file -src "$NuspecVcs\README.md"
    }        
-}|Save-Nuspec -FileName "$NuspecDelivery\Nuspec.nuspec"
+}|Save-Nuspec -FileName "$NuspecDelivery\PSNuspec.nuspec"
