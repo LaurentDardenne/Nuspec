@@ -1,10 +1,10 @@
 ﻿<-! Extract and adapted form : https://github.com/NuGet/NuGet.Client/blob/dev/src/NuGet.Core/NuGet.Packaging/compiler/resources/nuspec.xsd -->
 <?xml version="1.0" encoding="utf-8"?>
 <xs:schema id="nuspec"
-    targetNamespace="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd"
+    targetNamespace="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd"
     elementFormDefault="qualified"
-    xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd"
-    xmlns:mstns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd"
+    xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd"
+    xmlns:mstns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd"
     xmlns:xs="http://www.w3.org/2001/XMLSchema"
 >
     <xs:complexType name="dependency">

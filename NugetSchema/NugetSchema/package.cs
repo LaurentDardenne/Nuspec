@@ -16,8 +16,8 @@ namespace NugetSchema
     [System.SerializableAttribute()]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
-    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true, Namespace = "http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd")]
-    [System.Xml.Serialization.XmlRootAttribute(Namespace = "http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd", IsNullable = false)]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true, Namespace = "http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd")]
+    [System.Xml.Serialization.XmlRootAttribute(Namespace = "http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd", IsNullable = false)]
     public partial class package
     {
 
@@ -66,7 +66,7 @@ namespace NugetSchema
     [System.SerializableAttribute()]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
-    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true, Namespace = "http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true, Namespace = "http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd")]
     public partial class packageMetadata
     {
 
@@ -481,7 +481,7 @@ namespace NugetSchema
     [System.SerializableAttribute()]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
-    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true, Namespace = "http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true, Namespace = "http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd")]
     public partial class packageMetadataPackageType
     {
 
@@ -523,7 +523,7 @@ namespace NugetSchema
     [System.SerializableAttribute()]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
-    [System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd")]
+    [System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd")]
     public partial class contentFileEntries
     {
 
@@ -645,7 +645,7 @@ namespace NugetSchema
     [System.SerializableAttribute()]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
-    [System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd")]
+    [System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd")]
     public partial class referenceGroup
     {
 
@@ -687,7 +687,7 @@ namespace NugetSchema
     [System.SerializableAttribute()]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
-    [System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd")]
+    [System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd")]
     public partial class reference
     {
 
@@ -713,7 +713,7 @@ namespace NugetSchema
     [System.SerializableAttribute()]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
-    [System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd")]
+    [System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd")]
     public partial class dependencyGroup
     {
 
@@ -755,7 +755,7 @@ namespace NugetSchema
     [System.SerializableAttribute()]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
-    [System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd")]
+    [System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd")]
     public partial class dependency
     {
 
@@ -829,7 +829,7 @@ namespace NugetSchema
     [System.SerializableAttribute()]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
-    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true, Namespace = "http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true, Namespace = "http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd")]
     public partial class packageMetadataDependencies
     {
 
@@ -856,7 +856,7 @@ namespace NugetSchema
     [System.SerializableAttribute()]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
-    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true, Namespace = "http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true, Namespace = "http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd")]
     public partial class packageMetadataFrameworkAssembly
     {
 
@@ -898,7 +898,7 @@ namespace NugetSchema
     [System.SerializableAttribute()]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
-    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true, Namespace = "http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true, Namespace = "http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd")]
     public partial class packageMetadataReferences
     {
 
@@ -925,7 +925,7 @@ namespace NugetSchema
     [System.SerializableAttribute()]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
-    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true, Namespace = "http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true, Namespace = "http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd")]
     public partial class packageMetadataContentFiles
     {
 
@@ -951,7 +951,7 @@ namespace NugetSchema
     [System.SerializableAttribute()]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
-    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true, Namespace = "http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true, Namespace = "http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd")]
     public partial class packageFile
     {
 

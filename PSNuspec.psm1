@@ -6,9 +6,8 @@
 #  Install.ps1   : runs when a package is installed in a project.
 #  Uninstall.ps1 : runs every time a package is uninstalled. 
 
-$XsdFile='$PSscriptRoot\nuspec.2011.8.xsd'
-
-[System.Collections.Stack] $script:Stack=$null
+#SchemaVersionV6
+$XsdFile='$PSscriptRoot\nuspec.2013.05.xsd' 
 
 $predicate={
     [System.Management.Automation.Language.Ast]$ast = $args[0]
@@ -52,9 +51,8 @@ $predicate={
 XMLObject\Set-ParamAlias -Name Save-Nuspec -Command ConvertTo-XML `
  -parametersBinding @{
   SerializedType="'NugetSchema.package'"
-  targetNamespace="'http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd'"
-   #Nuget need XML file with encoding UTF8-NoBOM 
-  NoBom='$true'
+  targetNamespace="'http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd'"
+  NoBom='$true'    #Nuget need XML file with encoding UTF8-NoBOM 
 } 
 
 function Test-NuspecRules {
@@ -132,10 +130,7 @@ Function Test-Rule{
     . $Validator -Group $Group
   }
   if ($isError)
-  {
-    $script:Stack=$null  
-    throw "The $Container bloc contains one or more errors." #todo détail AST
-  }
+  { throw "The $Container bloc contains one or more errors." } #todo détail AST 
 }
 
 function nuspec {
@@ -160,19 +155,22 @@ function nuspec {
   Test-Rule -Container 'Nuspec' -Content 'properties' -Validator  'Test-NuspecRules' -Bloc $NuspecBloc
    #La classe Stack est sensible à la casse
   $UpperId=$ID.ToUpper()
-  if ( $null -eq $script:Stack)
-  { $script:Stack=New-Object System.Collections.Stack }
-  if ($script:Stack.Contains($upperId))
+  if ( $null -eq $Stack)
+  { 
+     #Rappel : Le premier appel crée la variable, 
+     #         les appels récursifs suivant recherche dans le scope parent 
+     $Stack=New-Object System.Collections.Stack 
+  }
+  if ($Stack.Contains($upperId))
   { 
       #On interdit la création d'un nuspec portant un ID déjà référencé, même si la version différe.
       #Sinon on pourrait avoir, par exemple, 'Module1' version 1.0 qui dépend de 'Module1' version 1.1  
-    $script:Stack=$null
     throw  "The package name '$Id' is already declared." 
   }
   
   Write-Debug "`t`t CREATE nuspec object $id"
   $Nuspec= [NugetSchema.package]::new()
-  $script:Stack.Push($upperId)
+  $Stack.Push($upperId)
    
   $List=[System.Collections.Generic.List[NugetSchema.Dependency]]::new(6)
   foreach( $resultBloc in &$NuspecBloc)
@@ -219,7 +217,7 @@ function nuspec {
     $Nuspec.metadata.dependencies.Items=$List
   }
   $PSCmdlet.WriteObject($Nuspec)
-  $script:Stack.Pop()>$null
+  $Stack.Pop()>$null
   Write-debug "`r`n`tLEAVE nuspec"
  }
 }
@@ -236,10 +234,7 @@ function properties {
   $SetProperties.ExceptWith($script:AllowedPropertiesName)
   $ofs=','
   if ($SetProperties.Count -gt 0)
-  { 
-    $script:Stack=$null 
-    throw "The names of the following properties are either unknown or misspelled : $SetProperties" 
-  }
+  {  throw "The names of the following properties are either unknown or misspelled : $SetProperties"  }
 
   $Mandatory=@()
   foreach ($Key in $Script:MandatoryPropertiesName)
@@ -248,10 +243,7 @@ function properties {
      {$Mandatory +=$Key}
   }
   if ($Mandatory.Count -gt 0 ) 
-  { 
-    $script:Stack=$null
-    throw "The following properties are mandatory : $Mandatory" 
-  } 
+  { throw "The following properties are mandatory : $Mandatory" } 
   #Récupère le Nuspec en cours: gv -scope -1
   New-NuspecMetadata -nuspec $Nuspec -ID $ID -Version $Version -DevelopmentDependency:$DevelopmentDependency
   Write-debug "`r`n`tLEAVE properties"
@@ -356,4 +348,36 @@ function file {
  Write-Debug "Add file -src $src"
  New-Object -TypeName NugetSchema.packageFile -Property $PSBoundParameters
  Write-Debug "`r`n`tLEAVE file"
+}
+
+function Import-ManifestData { 
+# Requires PS version 4.0
+#Lit un manifest de module et renvoi une hashtable contenant uniquement les clés qui y sont renseignées
+#from http://stackoverflow.com/questions/25408815/how-to-read-powershell-psd1-files-safely
+#Gére les clés ModuleToProcess (v4) ou RootModule (v5) 
+#
+#  Import-ManifestData -data "Mymodule.psd1"
+    [CmdletBinding()]
+    Param (
+        [Parameter(Mandatory = $true)]
+        [Microsoft.PowerShell.DesiredStateConfiguration.ArgumentToConfigurationDataTransformation()]
+        [hashtable] $data
+    )
+    return $data
+}#Import-ManifestData
+
+function Get-ScriptVersion {
+  #renvoi le numéro de version d'un script versionné
+ param( 
+   [string] $Path,
+   [int] $fieldCount
+ )
+ $FileInfo=Test-ScriptFileInfo -Path $Path
+ if ($null -ne $FileInfo)
+ {
+    if ($PSBoundParameters.ContainsKey('fieldCount'))  
+    { $FileInfo.Version.ToString($fieldCount) }
+    else
+    { $FileInfo.Version.ToString() }
+ }
 }
