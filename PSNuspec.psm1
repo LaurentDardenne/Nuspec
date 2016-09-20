@@ -1,4 +1,4 @@
-#Note : 
+﻿#Note : 
 # Warning with 'Nuget pack MyNuspecFile' : Assembly outside lib folder. -->  https://github.com/NuGet/Home/issues/2834}
 
 #
@@ -105,7 +105,7 @@ Function Test-Rule{
      [string]$Content,
      
      #Name of the validation function
-      [Parameter(position=1,Mandatory=$true)]
+      [Parameter(position=2,Mandatory=$true)]
      [string] $Validator,
      
      #Code to validate
