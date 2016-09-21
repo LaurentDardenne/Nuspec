@@ -210,7 +210,7 @@ function nuspec {
     }#switch                                                                                               
   }#foreach
   
-  Write-debug "WriteOutput created nuspec  : $($Nuspec.metadata.id)- $($Nuspec.metadata.version)"
+  Write-debug "WriteOutput created nuspec  : $($Nuspec.metadata.id)-$($Nuspec.metadata.version)"
   if($List.Count -gt 0)
   { 
     $Nuspec.metadata.dependencies=[NugetSchema.packageMetadataDependencies]::new()
@@ -379,5 +379,62 @@ function Get-ScriptVersion {
     { $FileInfo.Version.ToString($fieldCount) }
     else
     { $FileInfo.Version.ToString() }
+ }
+}
+function Push-nupkg {
+    #Push a nupkg to a server
+    #The working directory is $env:temp
+
+ [cmdletBinding()]
+ param(
+   #Nuget package to push   
+     [Parameter(Mandatory=$true,ValueFromPipeline=$true)]
+     [ValidateNotNullOrEmpty()]
+   [NugetSchema.package] $Package,
+
+   #Directory where you are saving the nuspec file 
+     [Parameter(Mandatory=$true)]
+     [ValidateNotNullOrEmpty()]
+   [string] $PathDelivery,
+
+   #Url of the nuget server
+     [Parameter(Mandatory=$true)]
+     [ValidateNotNullOrEmpty()]
+   [string] $Source,
+
+     [ValidateNotNullOrEmpty()]
+   [string] $ApiKey
+ )   
+ 
+ process {
+   $PkgName=$Package.metadata.id
+   $PkgVersion=$Package.metadata.version
+   $PathNuspec="$PathDelivery\$PkgName.nuspec"
+   
+   Write-verbose "Save-Nuspec '$PathNuspec'"
+   Save-Nuspec -Object $Package -FileName $PathNuspec
+   try {
+    $ErrorActionPreference='Stop'
+    Push-Location $env:Temp
+    nuget pack $PathNuspec 2>&1
+    Write-verbose "push '$env:Temp\$PkgName.$PkgVersion.nupkg'"
+    if ($PSBoundParameters.ContainsKey('ApiKey'))  
+    {
+      nuget push "$env:Temp\$PkgName.$PkgVersion.nupkg" -Source $source- Apikey $ApiKey 2>&1
+    }
+    else 
+    {  
+       #On utilise l'Apikey  sauvegardée sur le poste local
+      nuget push "$env:Temp\$PkgName.$PkgVersion.nupkg" -Source $source 2>&1
+    }
+    #Error :
+    #  'Feed does not exist' ->  la source n'existe pas
+    #  'Method Not Allowed'  -> erreur d'url
+    #  "An API key must be provided in the 'X-NuGet-ApiKey' header to use this service"  -> L'Apikey de la source est introuvable en local
+   }
+   finally {
+     Pop-Location
+     $ErrorActionPreference='Continue'
+   }
  }
 }

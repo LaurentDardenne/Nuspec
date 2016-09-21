@@ -12,7 +12,7 @@
 RootModule = 'PSNuspec.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.3.1'
+ModuleVersion = '0.4.0'
 
 # ID used to uniquely identify this module
 GUID = '35ef93fe-14de-4edd-b80d-a88db37892ea'
@@ -77,7 +77,8 @@ FunctionsToExport = @(
     'file',
     'Save-Nuspec',
     'Import-ManifestData',
-    'Get-ScriptVersion'
+    'Get-ScriptVersion',
+    'Push-nupkg' 
 )
 
 # Cmdlets to export from this module

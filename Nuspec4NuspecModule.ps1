@@ -1,7 +1,11 @@
 ﻿
+if(! (Test-Path variable:NuspecVcs))
+{
+    throw "The project configuration is required, see the 'Nuspec_ProjectProfile.ps1' script." 
+}
 $ModuleVersion=(Import-ManifestData "$NuspecVcs\PSNuspec.psd1").ModuleVersion
 
-nuspec 'PSNuspec' $ModuleVersion {
+$Result=nuspec 'PSNuspec' $ModuleVersion {
    properties @{
         Authors='Dardenne Laurent'
         Owners='Dardenne Laurent'
@@ -13,9 +17,8 @@ nuspec 'PSNuspec' $ModuleVersion {
         licenseUrl='https://creativecommons.org/licenses/by-nc-sa/4.0/'
         projectUrl='https://github.com/LaurentDardenne/Nuspec'
         iconUrl='https://github.com/LaurentDardenne/Nuspec/blob/master/icon/Nuspec.png'
-        releaseNotes="$(Get-Content "$NuspecVcs\CHANGELOG.md" -raw)"
-        tags='PSModule PSIncludes_Function PSFunction_nuspec PSFunction_properties PSFunction_Dependencies PSFunction_dependency PSFunction_Files PSFunction_file PSFunction_Save-Nuspec PSCommand_nuspec PSCommand_properties PSCommand_Dependencies PSCommand_dependency PSCommand_Files PSCommand_file PSCommand_Save-Nuspec'
-        #tags='nuspec XSD Powershell DSL'
+        releaseNotes="$(Get-Content "$NuspecVcs\releasenotes.md" -raw)"
+        tags='nuspec XSD Powershell DSL'
    }
    
    dependencies {
@@ -28,5 +31,10 @@ nuspec 'PSNuspec' $ModuleVersion {
         file -src "$NuspecVcs\PSNuspec.psd1"
         file -src "$NuspecVcs\PSNuspec.psm1"
         file -src "$NuspecVcs\README.md"
+        file -src "$NuspecVcs\releasenotes.md"
    }        
-}|Save-Nuspec -FileName "$NuspecDelivery\PSNuspec.nuspec"
+}
+
+$Result|
+  Push-nupkg -Path $NuspecDelivery -Source 'https://www.myget.org/F/ottomatt/api/v2/package'
+  
