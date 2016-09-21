@@ -82,3 +82,14 @@ dependencies                      : {Machin, Truc, Module two}
 The 'Nuspec' bloc create an instance of _[NugetSchema.package]_, then the Save-Nuspec function create a XML file from the C# instance.
 See the [XMLObject module](https://github.com/LaurentDardenne/XMLObject).
 
+To push one or more packages :
+```Powershell
+$Result=nuspec 'PSNuspec' 1.0.0 {
+            properties @{
+                Authors='Dardenne Laurent'
+                ...
+}
+
+$Result|
+ Push-nupkg -Path $NuspecDelivery -Source 'https://www.myget.org/F/ottomatt/api/v2/package' -Apikey $Key
+```
