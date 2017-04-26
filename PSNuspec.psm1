@@ -142,6 +142,7 @@ function nuspec {
       [string]$id,
 
        #nuget.exe : '1.A.0' |'(1.0.0)' is not a valid version string.
+       #see : https://github.com/PowerShell/PowerShellGet/issues/88#issuecomment-294950649
        [parameter(position=1,Mandatory=$true)]
       [string]$version,
 
