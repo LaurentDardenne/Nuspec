@@ -2,6 +2,15 @@
 Powershell DSL to create a nuspec file.
 Only the following features are implemented : Files, Dependencies
 
+To install this module :
+```Powershell
+$PSGalleryPublishUri = 'https://www.myget.org/F/ottomatt/api/v2/package'
+$PSGallerySourceUri = 'https://www.myget.org/F/ottomatt/api/v2'
+
+Register-PSRepository -Name OttoMatt -SourceLocation $PSGallerySourceUri -PublishLocation $PSGalleryPublishUri #-InstallationPolicy Trusted
+Install-Module PSNuspec -Repository OttoMatt
+```
+
 To avoid the character encoding problems with nuspec files ('_utilisÃ©s_' instead '_utilisés_'), the scripts must be encoded with UTF8 nobom.
 ```Powershell
 nuspec '1.0' 'MyModule' {
