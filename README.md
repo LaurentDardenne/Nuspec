@@ -13,7 +13,7 @@ Install-Module PSNuspec -Repository OttoMatt
 
 To avoid the character encoding problems with nuspec files ('_utilisÃ©s_' instead '_utilisés_'), the scripts must be encoded with UTF8 nobom.
 ```Powershell
-nuspec '1.0' 'MyModule' {
+nuspec 'MyModule' '1.0' {
    properties @{
         Authors=$Env:USERNAME
         Description='test'
@@ -40,7 +40,7 @@ nuspec '1.0' 'MyModule' {
       file -src 'C:\temp\Remove-Conditionnal.ps1'
       file -src 'C:\temp\Replace-String.ps1'
    }
-}|Save-Nuspec -FileName c:\temp\Test.nuspec -Nobom
+}|Save-Nuspec -FileName c:\temp\Test.nuspec
 ```
 It is possible to create nested nuspec :
 ```Powershell
@@ -93,6 +93,8 @@ See the [XMLObject module](https://github.com/LaurentDardenne/XMLObject).
 
 To push one or more packages :
 ```Powershell
+$NuspecDelivery='C:\temp'
+
 $Result=nuspec 'PSNuspec' 1.0.0 {
             properties @{
                 Authors='Dardenne Laurent'
