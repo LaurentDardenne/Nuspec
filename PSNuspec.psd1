@@ -12,7 +12,7 @@
 RootModule = 'PSNuspec.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.4.0'
+ModuleVersion = '0.4.1'
 
 # ID used to uniquely identify this module
 GUID = '35ef93fe-14de-4edd-b80d-a88db37892ea'
