@@ -421,7 +421,7 @@ function Push-nupkg {
     Write-verbose "push '$env:Temp\$PkgName.$PkgVersion.nupkg'"
     if ($PSBoundParameters.ContainsKey('ApiKey'))  
     {
-      nuget push "$env:Temp\$PkgName.$PkgVersion.nupkg" -Source $source- Apikey $ApiKey 2>&1
+      nuget push "$env:Temp\$PkgName.$PkgVersion.nupkg" -Source $source -Apikey $ApiKey 2>&1
     }
     else 
     {  
